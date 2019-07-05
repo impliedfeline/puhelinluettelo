@@ -14,7 +14,15 @@ if ( process.argv.length < 3 ) {
   const url =
     `mongodb+srv://fullstack:${password}@cluster0-utcjg.mongodb.net/puhelinluettelo?retryWrites=true&w=majority`
 
+  console.log('connecting to', url)
+
   mongoose.connect(url, { useNewUrlParser: true })
+    .then(result => {
+      console.log('connected to MongoDB')
+    })
+    .catch(error => {
+      console.log('error connecting to MongoDB:', error.message)
+    })
 
   const personSchema = new mongoose.Schema({
     name: String,
@@ -25,8 +33,8 @@ if ( process.argv.length < 3 ) {
 
   if ( process.argv.length === 3 ) {
     console.log('phonebook:')
-    Person.find({}).then(res => {
-      res.forEach(person => {
+    Person.find({}).then(result => {
+      result.forEach(person => {
         console.log(`${person.name}\t${person.number}`)
       })
       mongoose.connection.close()
