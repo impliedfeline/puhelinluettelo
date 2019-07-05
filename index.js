@@ -28,7 +28,7 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-  Person.find({}).then(persons => res.json(persons.toJSON()))
+  Person.find({}).then(persons => res.json(persons.map(p => p.toJSON())))
 })
 
 app.post('/api/persons', (req, res) => {
