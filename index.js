@@ -8,13 +8,15 @@ const cors = require('cors')
 
 const Person = require('./models/person')
 
-morgan.token('post', (req, res) => { return JSON.stringify(req.body) })
+morgan.token('post', (req, res) => {
+  const body = req.body
+  return Object.entries(body).length !== 0 ? JSON.stringify(req.body) : ''
+})
 
 app.use(cors())
 app.use(express.static('build'))
 app.use(bodyParser.json())
-app.use(morgan('tiny'))
-app.use(morgan(':post'))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms - :post'))
 
 app.get('/info', (req, res) => {
   Person.find({}).then(persons => {
@@ -57,7 +59,7 @@ app.post('/api/persons', (req, res) => {
   })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id)
     .then(person => {
       if (person) {
@@ -66,18 +68,43 @@ app.get('/api/persons/:id', (req, res) => {
         res.status(404).end()
       }
     })
-    .catch(error => {
-      console.log(error)
-      res.status(400).send({ error: 'malformed id' })
+    .catch(error => next(error))
+})
+
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then(_ => {
+      res.status(204).end()
     })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(p => p.id !== id)
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
 
-  res.status(204).end()
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+      res.json(updatedPerson.toJSON())
+    })
+    .catch(error => next(error))
 })
+
+const errorHandler = (err, req, res, next) => {
+  console.error(err.message)
+
+  if ( err.name === 'CastError' && err.kind === 'ObjectId' ) {
+    return res.status(400).send({ error: 'malformed id' })
+  }
+
+  next(err)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
