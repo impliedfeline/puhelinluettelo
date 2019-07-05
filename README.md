@@ -1,6 +1,6 @@
 # puhelinluettelo
 full-stack-open osa3
-https://beautiful-north-cascades-13709.herokuapp.com/
+[heroku app](https://beautiful-north-cascades-13709.herokuapp.com/)
 
 ## Installing
 ```
