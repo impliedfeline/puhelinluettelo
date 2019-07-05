@@ -33,30 +33,19 @@ app.get('/api/persons', (req, res) => {
   Person.find({}).then(persons => res.json(persons.map(p => p.toJSON())))
 })
 
-app.post('/api/persons', (req, res) => {
-  Person.find({}).then(persons => {
-    const body = req.body
+app.post('/api/persons', (req, res, next) => {
+  const body = req.body
 
-    const nameError = body.name
-      ? persons.some(p => p.name === body.name) && 'name must be unique' 
-      : 'name missing'
-    const numberError = body.number ? false : 'number missing'
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
 
-    if (nameError || numberError) {
-      return res.status(400).json({
-        error: [nameError, numberError].filter(e => e)
-      })
-    }
-
-    const person = new Person({
-      name: body.name,
-      number: body.number,
-    })
-
-    person.save().then(savedPerson => {
+  person.save()
+    .then(savedPerson => {
       res.json(savedPerson.toJSON())
     })
-  })
+    .catch(err => next(err))
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -68,7 +57,7 @@ app.get('/api/persons/:id', (req, res, next) => {
         res.status(404).end()
       }
     })
-    .catch(error => next(error))
+    .catch(err => next(err))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -76,7 +65,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .then(_ => {
       res.status(204).end()
     })
-    .catch(error => next(error))
+    .catch(err => next(err))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -91,7 +80,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     .then(updatedPerson => {
       res.json(updatedPerson.toJSON())
     })
-    .catch(error => next(error))
+    .catch(err => next(err))
 })
 
 const errorHandler = (err, req, res, next) => {
@@ -99,6 +88,8 @@ const errorHandler = (err, req, res, next) => {
 
   if ( err.name === 'CastError' && err.kind === 'ObjectId' ) {
     return res.status(400).send({ error: 'malformed id' })
+  } else if ( err.name === 'ValidationError' ) {
+    return res.status(400).json({ error: err.message })
   }
 
   next(err)
