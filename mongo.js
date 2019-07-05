@@ -17,7 +17,7 @@ if ( process.argv.length < 3 ) {
   console.log('connecting to', url)
 
   mongoose.connect(url, { useNewUrlParser: true })
-    .then(result => {
+    .then(() => {
       console.log('connected to MongoDB')
     })
     .catch(error => {
@@ -49,9 +49,9 @@ if ( process.argv.length < 3 ) {
       number,
     })
 
-    person.save().then(response => {
-      console.log(`added ${name} number ${number} to phonebook`);
-      mongoose.connection.close();
+    person.save().then(() => {
+      console.log(`added ${name} number ${number} to phonebook`)
+      mongoose.connection.close()
     })
   }
 
